@@ -49,4 +49,29 @@ def main():
     worker = 50
     start_time = time.time()
     done = False
-
+    while not done:
+        os.system('clear')
+        print('Asynchronously: (now = %.2f)' % (time.time() - start_time,))
+        done = True
+        result = async_results[file].return_value
+        if result is None:
+            done = False
+            result = '(calculating)'
+        if result != '(calculating)':
+            end_time = time.time()
+            total_time = end_time - start_time
+            cursor = connection.execute("INSERT OR REPLACE INTO RESULTS VALUES (?, ?, ?)",
+                                                    (file, result, total_time))
+            connection.commit()
+        else:
+            print "Continue"
+    print total_time
+    cursor = connection.execute("INSERT OR REPLACE INTO WORKERS VALUES (?, ?)",
+                                (worker, total_time))
+    connection.commit()
+    print('Done')
+    
+    if __name__ == '__main__':
+    with Connection():
+        main()
+    

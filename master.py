@@ -27,4 +27,26 @@ def main():
                                                  (WORKER INT PRIMARY KEY     NOT NULL,
                                                  TimeTaken      REAL    NOT NULL);''')
     print "Table Created."
-    
+    q = Queue()
+    commits_touching_path = list(repo.iter_commits('master'))
+    for root, dirs, files in os.walk(repo_dir):
+        for file in files:
+            for i in range(len(commits_touching_path)):
+                commits = commits_touching_path[i]
+                if file.endswith(".py"):
+                    try:
+                        file_contents = repo.git.show('{}:{}'.format(commits.hexsha, file))
+                        f1 = open(directory + 'test_' + str(i) + '.py', 'a')
+                        f1.write(file_contents)
+                    except git.exc.GitCommandError:
+                        continue
+    f1.close()
+    for root, dirs, files in os.walk(directory):
+        for file in files:
+            q1 = str(os.path.join(directory, file))
+            async_results[file] = q.enqueue(get_complexity, q1) 
+            
+    worker = 50
+    start_time = time.time()
+    done = False
+
